@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Расписание — ИМО4-25-41</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1b2340;
+    --bg:#f6f6f0;
+    --bg-soft:#fbeed4;
+    --paper:#1b2340;
+    --paper-dim:#5b6180;
+    --gold:#e3a23c;
+    --gold-deep:#8a5c14;
+    --teal:#2f7d72;
+    --rose:#a85166;
+    --grey:#9a9a94;
+    --line:#dcdccd;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  .page{ max-width:640px; margin:0 auto; padding:44px 22px 64px; }
+  header.hero{ padding-bottom:28px; border-bottom:1px solid var(--line); margin-bottom:6px; }
+  .group{ font-size:15px; color:var(--gold-deep); margin:0 0 12px; font-weight:500; }
+  h1{ font-family:'Newsreader', serif; font-weight:600; font-size:42px; line-height:1.14; margin:0 0 14px; color:var(--paper); }
+  .pattern{ font-size:17px; margin:0 0 6px; max-width:38ch; }
+  .location{ font-size:15px; color:var(--paper-dim); margin:0 0 16px; font-style:italic; font-family:'Newsreader', serif; }
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:13.5px; color:var(--paper-dim); }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend i{ width:10px; height:10px; border-radius:2px; display:inline-block; }
+  .legend .l-lecture{ background:var(--gold); }
+  .legend .l-seminar{ background:var(--teal); }
+  .legend .l-practice{ background:var(--rose); }
+
+  section.month{ padding:26px 0 6px; border-bottom:1px solid var(--line); }
+  section.month:last-of-type{ border-bottom:none; }
+  section.month h2{ font-family:'Newsreader', serif; font-weight:600; font-size:26px; margin:0 0 14px; color:var(--gold-deep); }
+
+  .date-row{ padding:14px 0; border-top:1px dashed var(--line); }
+  section.month .date-row:first-of-type{ border-top:none; }
+  .date-row.week-start{ margin-top:14px; padding-top:28px; border-top:2px solid var(--paper); }
+  section.month .date-row.week-start:first-of-type{ margin-top:0; padding-top:14px; border-top:none; }
+  .date-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:10px; }
+  .date-num{ font-family:'Newsreader', serif; font-size:20px; font-weight:600; color:var(--paper); min-width:112px; }
+  .weekday{ font-size:13px; color:var(--paper); font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
+
+  .class{ display:flex; gap:14px; padding:8px 0 8px 14px; border-left:2px solid var(--gold); margin-bottom:6px; }
+  .class.type-seminar{ border-left-color:var(--teal); }
+  .class.type-practice{ border-left-color:var(--rose); }
+  .class.type-holiday{ border-left-color:var(--grey); }
+  .class:last-child{ margin-bottom:0; }
+  .time{ font-size:15px; font-weight:600; color:var(--paper); white-space:nowrap; padding-top:1px; min-width:96px; }
+  .subject{ font-family:'Newsreader', serif; font-weight:400; font-size:19px; margin:0 0 3px; color:var(--paper); }
+  .meta{ font-size:14px; color:var(--paper-dim); margin:0; }
+  .bld{ color:var(--paper-dim); font-weight:400; }
+  .type-label{ color:var(--gold-deep); font-weight:600; }
+
+  .date-row.holiday .date-num{ color:var(--paper-dim); }
+  .date-row.holiday .subject{ color:var(--paper-dim); font-style:italic; }
+
+  .date-row.today{ background:var(--bg-soft); margin:0 -14px; padding:14px 14px; border-radius:6px; border-top:none; box-shadow:0 0 0 1px var(--line) inset; }
+  .date-row.today .date-head::after{
+    content:"сегодня"; font-family:'IBM Plex Sans', sans-serif; font-size:12.5px; font-weight:600;
+    color:var(--ink); background:var(--gold); padding:2px 8px; border-radius:3px;
+  }
+
+  footer{ margin-top:32px; font-size:14.5px; color:var(--paper-dim); max-width:50ch; }
+  footer p{ margin:0 0 8px; }
+
+  @media (max-width:480px){
+    h1{ font-size:34px; }
+    .class{ flex-direction:column; gap:3px; }
+    .time{ min-width:0; }
+    .date-num{ min-width:0; }
+  }
+
+  .today-jump{
+    position:fixed;
+    left:50%;
+    bottom:26px;
+    transform:translateX(-50%) translateY(12px);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--paper);
+    color:var(--bg);
+    border:none;
+    padding:11px 16px;
+    border-radius:999px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(27,35,64,0.28);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:100;
+  }
+  .today-jump.visible{
+    opacity:1;
+    pointer-events:auto;
+    transform:translateX(-50%) translateY(0);
+  }
+  .today-jump:hover{ background:var(--gold-deep); }
+  .today-jump svg{ width:15px; height:15px; flex:none; }
+
+  @media (max-width:480px){
+    .today-jump{ bottom:16px; padding:10px 14px; font-size:13px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <p class="group">ИМО4-25-41</p>
+    <h1>Расписание на 3 семестр</h1>
+       <p class="pattern">2 сентября — 30 декабря 2026.</p><p class="pattern"></p> Занятия в понедельник, среду и четверг, с 6 ноября +пятница.</p><p class="pattern"></p> Практика — с 28 сентября по 15 января.</p>
+    <div class="legend">
+      <span><i class="l-lecture"></i>лекция</span>
+      <span><i class="l-seminar"></i>семинар</span>
+      <span><i class="l-practice"></i>практическое занятие</span>
+    </div>
+  </header>
+
+<section class="month"><h2>Сентябрь</h2><div class="date-row" data-date="2026-09-02">
+  <div class="date-head"><span class="date-num">2 сентября</span><span class="weekday">Среда</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-lecture">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-lecture">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-09-03">
+  <div class="date-head"><span class="date-num">3 сентября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-09-07">
+  <div class="date-head"><span class="date-num">7 сентября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-lecture">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-lecture">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-09-09">
+  <div class="date-head"><span class="date-num">9 сентября</span><span class="weekday">Среда</span></div>
+  <div class="class type-seminar">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-09-10">
+  <div class="date-head"><span class="date-num">10 сентября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-09-14">
+  <div class="date-head"><span class="date-num">14 сентября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-seminar">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-09-16">
+  <div class="date-head"><span class="date-num">16 сентября</span><span class="weekday">Среда</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-lecture">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-09-17">
+  <div class="date-head"><span class="date-num">17 сентября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-09-21">
+  <div class="date-head"><span class="date-num">21 сентября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-practice">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-09-23">
+  <div class="date-head"><span class="date-num">23 сентября</span><span class="weekday">Среда</span></div>
+  <div class="class type-seminar">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-09-24">
+  <div class="date-head"><span class="date-num">24 сентября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-09-28">
+  <div class="date-head"><span class="date-num">28 сентября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-seminar">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-09-30">
+  <div class="date-head"><span class="date-num">30 сентября</span><span class="weekday">Среда</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-lecture">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div></section>
+<section class="month"><h2>Октябрь</h2><div class="date-row" data-date="2026-10-01">
+  <div class="date-head"><span class="date-num">1 октября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-10-05">
+  <div class="date-head"><span class="date-num">5 октября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-practice">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-10-07">
+  <div class="date-head"><span class="date-num">7 октября</span><span class="weekday">Среда</span></div>
+  <div class="class type-seminar">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-10-08">
+  <div class="date-head"><span class="date-num">8 октября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-10-12">
+  <div class="date-head"><span class="date-num">12 октября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-seminar">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-10-14">
+  <div class="date-head"><span class="date-num">14 октября</span><span class="weekday">Среда</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-lecture">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-10-15">
+  <div class="date-head"><span class="date-num">15 октября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-10-19">
+  <div class="date-head"><span class="date-num">19 октября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-practice">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-10-21">
+  <div class="date-head"><span class="date-num">21 октября</span><span class="weekday">Среда</span></div>
+  <div class="class type-seminar">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-10-22">
+  <div class="date-head"><span class="date-num">22 октября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-10-26">
+  <div class="date-head"><span class="date-num">26 октября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-seminar">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-10-28">
+  <div class="date-head"><span class="date-num">28 октября</span><span class="weekday">Среда</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-lecture">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-10-29">
+  <div class="date-head"><span class="date-num">29 октября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div></section>
+<section class="month"><h2>Ноябрь</h2><div class="date-row week-start" data-date="2026-11-02">
+  <div class="date-head"><span class="date-num">2 ноября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-practice">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row holiday">
+  <div class="date-head"><span class="date-num">4 ноября</span><span class="weekday">Среда</span></div>
+  <div class="class type-holiday"><div class="info"><p class="subject">День народного единства</p><p class="meta">выходной день</p></div></div>
+</div><div class="date-row" data-date="2026-11-05">
+  <div class="date-head"><span class="date-num">5 ноября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-11-06">
+  <div class="date-head"><span class="date-num">6 ноября</span><span class="weekday">Пятница</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-11-09">
+  <div class="date-head"><span class="date-num">9 ноября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-seminar">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-11-11">
+  <div class="date-head"><span class="date-num">11 ноября</span><span class="weekday">Среда</span></div>
+  <div class="class type-seminar">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-11-12">
+  <div class="date-head"><span class="date-num">12 ноября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-11-13">
+  <div class="date-head"><span class="date-num">13 ноября</span><span class="weekday">Пятница</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-11-16">
+  <div class="date-head"><span class="date-num">16 ноября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-practice">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-11-18">
+  <div class="date-head"><span class="date-num">18 ноября</span><span class="weekday">Среда</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-lecture">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-11-19">
+  <div class="date-head"><span class="date-num">19 ноября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-11-20">
+  <div class="date-head"><span class="date-num">20 ноября</span><span class="weekday">Пятница</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-11-23">
+  <div class="date-head"><span class="date-num">23 ноября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-seminar">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-11-25">
+  <div class="date-head"><span class="date-num">25 ноября</span><span class="weekday">Среда</span></div>
+  <div class="class type-seminar">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-11-26">
+  <div class="date-head"><span class="date-num">26 ноября</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-11-27">
+  <div class="date-head"><span class="date-num">27 ноября</span><span class="weekday">Пятница</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-11-30">
+  <div class="date-head"><span class="date-num">30 ноября</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-practice">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div></section>
+<section class="month"><h2>Декабрь</h2><div class="date-row" data-date="2026-12-02">
+  <div class="date-head"><span class="date-num">2 декабря</span><span class="weekday">Среда</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-lecture">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-03">
+  <div class="date-head"><span class="date-num">3 декабря</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-04">
+  <div class="date-head"><span class="date-num">4 декабря</span><span class="weekday">Пятница</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-12-07">
+  <div class="date-head"><span class="date-num">7 декабря</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-seminar">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-09">
+  <div class="date-head"><span class="date-num">9 декабря</span><span class="weekday">Среда</span></div>
+  <div class="class type-seminar">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-10">
+  <div class="date-head"><span class="date-num">10 декабря</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-11">
+  <div class="date-head"><span class="date-num">11 декабря</span><span class="weekday">Пятница</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-12-14">
+  <div class="date-head"><span class="date-num">14 декабря</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-practice">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-16">
+  <div class="date-head"><span class="date-num">16 декабря</span><span class="weekday">Среда</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-lecture">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-17">
+  <div class="date-head"><span class="date-num">17 декабря</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-18">
+  <div class="date-head"><span class="date-num">18 декабря</span><span class="weekday">Пятница</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-12-21">
+  <div class="date-head"><span class="date-num">21 декабря</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-seminar">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-practice">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-23">
+  <div class="date-head"><span class="date-num">23 декабря</span><span class="weekday">Среда</span></div>
+  <div class="class type-seminar">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-24">
+  <div class="date-head"><span class="date-num">24 декабря</span><span class="weekday">Четверг</span></div>
+  <div class="class type-practice">
+    <div class="time">18:00–22:20</div>
+    <div class="info"><p class="subject">Иностранный язык в сфере профессиональной коммуникации</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 203 <span class="bld">(36)</span>, Ларина Т.В., подгруппа 1</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-25">
+  <div class="date-head"><span class="date-num">25 декабря</span><span class="weekday">Пятница</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Интегрированные коммуникации</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 320 <span class="bld">(38с2)</span>, Чумиков А.Н.</p></div>
+  </div>
+</div><div class="date-row week-start" data-date="2026-12-28">
+  <div class="date-head"><span class="date-num">28 декабря</span><span class="weekday">Понедельник</span></div>
+  <div class="class type-practice">
+    <div class="time">19:00–20:20</div>
+    <div class="info"><p class="subject">Управление имиджем</p><p class="meta"><span class="type-label">Практическое занятие</span>, ауд. 304 <span class="bld">(38с2)</span>, Шаркова И.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">20:30–21:50</div>
+    <div class="info"><p class="subject">Медийные исследования</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 304 <span class="bld">(38с2)</span>, Стенина Н.Е.</p></div>
+  </div>
+</div><div class="date-row" data-date="2026-12-30">
+  <div class="date-head"><span class="date-num">30 декабря</span><span class="weekday">Среда</span></div>
+  <div class="class type-lecture">
+    <div class="time">18:00–19:20</div>
+    <div class="info"><p class="subject">Процедурные вопросы коммуникационных технологий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 412 <span class="bld">(36)</span>, Семихатова Е.В.</p></div>
+  </div><div class="class type-seminar">
+    <div class="time">19:30–20:50</div>
+    <div class="info"><p class="subject">Реализация коммуникационных проектов (кампаний)</p><p class="meta"><span class="type-label">Семинар</span>, ауд. 412 <span class="bld">(36)</span>, Никитина О.О.</p></div>
+  </div><div class="class type-lecture">
+    <div class="time">21:00–22:20</div>
+    <div class="info"><p class="subject">Брендинг территорий</p><p class="meta"><span class="type-label">Лекция</span>, ауд. 403 <span class="bld">(38с2)</span>, Аверина М.В.</p></div>
+  </div>
+
+</div>
+
+<button class="today-jump" id="todayJump" type="button">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"></rect><path d="M8 2.5v4M16 2.5v4M3 9.5h18"></path><circle cx="9" cy="14" r="1" fill="currentColor" stroke="none"></circle><circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"></circle><circle cx="15" cy="14" r="1" fill="currentColor" stroke="none"></circle></svg>
+  <span class="label">Сегодня</span>
+</button>
+
+<script>
+  // используем локальную дату устройства (не UTC), чтобы подсветка не сбивалась near midnight
+  var now = new Date();
+  var pad = function(n){ return n < 10 ? '0' + n : n; };
+  var todayStr = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  var el = document.querySelector('.date-row[data-date="' + todayStr + '"]');
+  var jumpBtn = document.getElementById('todayJump');
+
+  if (el) {
+    el.classList.add('today');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    var updateJumpVisibility = function(){
+      var rect = el.getBoundingClientRect();
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      var isVisible = rect.bottom > 0 && rect.top < vh;
+      jumpBtn.classList.toggle('visible', !isVisible);
+    };
+
+    jumpBtn.addEventListener('click', function(){
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    window.addEventListener('scroll', updateJumpVisibility, { passive: true });
+    window.addEventListener('resize', updateJumpVisibility);
+    // подождать конца автопрокрутки к "сегодня" перед первой проверкой
+    setTimeout(updateJumpVisibility, 700);
+  } else {
+    // сегодняшней даты нет в расписании — кнопку не показываем
+    jumpBtn.remove();
+  }
+</script>
+</body>
+</html>
